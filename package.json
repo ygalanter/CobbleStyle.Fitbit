@@ -1,0 +1,15 @@
+{
+  "fitbit": {
+    "appUUID": "eac57a39-7b78-4b04-9867-a0f59b47e920",
+    "appType": "clockface",
+    "appDisplayName": "Cobblestyle",
+    "iconFile": "resources/icon.png",
+    "wipeColor": "",
+    "requestedPermissions": [],
+    "i18n": {
+      "en": {
+        "name": "Cobblestyle"
+      }
+    }
+  }
+}
