@@ -183,7 +183,7 @@ function prv_queryWUWeather(apiKey, feelsLike, latitude, longitude, success, err
       if(condition === 'clear'){
         condition = Conditions.ClearSky;
       }
-      else if(condition === 'mostlyysunny' || condition === 'partlycloudy'){
+      else if(condition === 'mostlysunny' || condition === 'partlycloudy'){
         condition = Conditions.FewClouds;
       }
       else if(condition === 'partlysunny' || condition === 'mostlycloudy'){
@@ -357,6 +357,10 @@ function prv_queryYahooWeather(latitude, longitude, success, error) {
           condition = Conditions.Snow; break;
         case 20 :
           condition = Conditions.Mist; break;
+        case 26 :
+        case 27 :
+        case 28 :
+          condition = Conditions.BrokenClouds; break;
         default : condition = Conditions.Unknown; break;
       }
 

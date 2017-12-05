@@ -11,7 +11,7 @@ let weather = new Weather();
 // Message socket opens
 messaging.peerSocket.onopen = () => {
   console.log("Companion Socket Open");
-  // restoreSettings(); SETTINGS ARE RESTORED FROM THE WATCH ITSELF, NOT HERE
+  restoreSettings(); 
 };
 
 // Message socket closes

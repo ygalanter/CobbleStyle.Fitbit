@@ -67,7 +67,7 @@
     <rect x="10" y="33%+15" width="60" height="28" fill="black" />
     <rect id="batteryBackground" x="12" y="33%+17" width="56" height="24" fill="forestgreen" />
     <rect id="batteryBar" x="14" y="33%+19" width="0" height="20" fill="black" />
-    <text id="battery" class="sideBarSmall" x="50%" y="66%-16">...%</text>
+    <text id="batteryText" class="sideBarSmall" x="50%" y="66%-16">...%</text>
     
     <image id="icon" width="60" height="60" x="10" y="100%-90" href="images/unknown.png"/>
     <text id="temp" class="sideBarSmall" x="50%" y = "100%-7" text-anchor="middle">...°</text>

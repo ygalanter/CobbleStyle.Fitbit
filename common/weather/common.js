@@ -13,6 +13,7 @@ export const Conditions = {
 
 export var WEATHER_MESSAGE_KEY = "my_awesome_weather_message";
 
+
 export const weather_icon = {
   day: {
     0: 'clear.png',

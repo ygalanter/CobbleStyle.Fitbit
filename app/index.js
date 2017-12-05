@@ -23,7 +23,7 @@ let icon = document.getElementById("icon");
 let temp = document.getElementById("temp");
 let topOption = document.getElementById("topOption");
 let bottomOption = document.getElementById("bottomOption");
-let battery = document.getElementById("battery");
+let batteryText = document.getElementById("batteryText");
 let batteryBar = document.getElementById("batteryBar");
 let batteryBackground = document.getElementById("batteryBackground");
 let sidebarBackground = document.getElementById("sidebarBackground");
@@ -63,7 +63,7 @@ try {
   userSettings = fs.readFileSync("user_settings.json", "json");
   //restoring previous weather
   icon.href = userSettings.iconHref;
-  temp.innerText = userSettings.tempText;
+  temp.text = userSettings.tempText;
   
 } catch (e) {
   userSettings = {
@@ -79,7 +79,9 @@ try {
     location: "...",
     clockFace: TIME_DIGITAL,
     timezoneOffset: null, // secondary timezone UTC offset
-    timezoneName: null // secondary timezone short name
+    timezoneName: null, // secondary timezone short name
+    iconHref: "images/unknown.png",
+    tempText: "...°",
   }
 }
 
@@ -96,25 +98,23 @@ function setClockFace(type) {
 function setOption(optionField, optionType) {
     switch (optionType) {
       case OPTION_DISABLED:
-        optionField.innerText = "";
+        optionField.text = "";
         break;
       case OPTION_TEXT:
-        optionField.innerText = userSettings.text.toUpperCase();
+        optionField.text = userSettings.text.toUpperCase();
         break;
       case OPTION_AMPM:
-        optionField.innerText = dtlib.getAmApm(today.getHours());
+        optionField.text = dtlib.getAmApm(today.getHours());
         break;
       case OPTION_STEP_COUNTER:
-        optionField.innerText = userActivity.today.local[METRIC] + " steps";
+        optionField.text = userActivity.today.local[METRIC] + " steps";
         break;
       case OPTION_LOCATION:
-        optionField.innerText = userSettings.location.toUpperCase();
+        optionField.text = userSettings.location.toUpperCase();
         break;
       case OPTION_SECONDARY_TIMEZONE:
         let newToday;
-        
-        console.log(userSettings.timezoneName);
-        
+       
         if (userSettings.timezoneOffset) { 
           let utc = today.getTime() + (today.getTimezoneOffset() * 60000);
           newToday = new Date(utc + (60000*userSettings.timezoneOffset));
@@ -140,7 +140,7 @@ function setOption(optionField, optionType) {
           locName = userSettings.timezoneName + " ";
         }
 
-        optionField.innerText = `${locName}${hours}${userSettings.timeSeparator}${mins}${ampm}`;
+        optionField.text = `${locName}${hours}${userSettings.timeSeparator}${mins}${ampm}`;
        
         break;
       default:
@@ -176,7 +176,7 @@ let sidebarPrimaryColor = "forestgreen";
 let sidebarSecondaryColor = "darkgreen";
 
 function updateBattery(charge) {
-  battery.innerText = `${charge}%`;
+  batteryText.text = `${charge}%`;
   batteryBar.width = 51*charge/100;
   
   if (userSettings.color == COLOR_MANUAL) return;
@@ -215,16 +215,16 @@ function updateClock() {
   
   let mins = dtlib.zeroPad(today.getMinutes());
 
-  digitalTime.innerText = `${hours}${userSettings.timeSeparator}${mins}`;
+  digitalTime.text = `${hours}${userSettings.timeSeparator}${mins}`;
   
    // displaying short month name in English
-  lblMonth.innerText = dtlib.getMonthNameShort(dtlib.LANGUAGES.ENGLISH, today.getMonth());
+  lblMonth.text = dtlib.getMonthNameShort(dtlib.LANGUAGES.ENGLISH, today.getMonth());
   
   // displaying 0-prepended day of the month
-  lblDate.innerText = dtlib.zeroPad(today.getDate());
+  lblDate.text = dtlib.zeroPad(today.getDate());
   
   // displaying shot day of the week in English
-  lblDow.innerText = dtlib.getDowNameShort(dtlib.LANGUAGES.ENGLISH, today.getDay());
+  lblDow.text = dtlib.getDowNameShort(dtlib.LANGUAGES.ENGLISH, today.getDay());
   
   // updating options' text
   setOption(topOption, userSettings.optionTop);
@@ -246,11 +246,11 @@ weather.onsuccess = (data) => {
   icon.href = "images/" + weather_icon[data.isDay? "day" : "night"][data.conditionCode];
   
   //setting temperature
-  temp.innerText = Math.round(data[`temperature${userSettings.weatherTemperature}`]) + "°"
+  temp.text = Math.round(data[`temperature${userSettings.weatherTemperature}`]) + "°"
   
   // preserving in user settings
   userSettings.iconHref = icon.href;
-  userSettings.tempText = temp.innerText;
+  userSettings.tempText = temp.text;
   userSettings.location = data.location;
   
   // updating location text if option is set
@@ -266,11 +266,11 @@ weather.onerror = (error) => {
   icon.href = "images/unknown.png";
   
   //setting temperature
-  temp.innerText = "...°"
+  temp.text = "...°"
   
   // preserving in user settings
   userSettings.iconHref = icon.href;
-  userSettings.tempText = temp.innerText;
+  userSettings.tempText = temp.text;
   userSettings.location = "...";
   
   // updating location text if option is set
@@ -293,44 +293,46 @@ messaging.peerSocket.onclose = () => {
   
 }
 
+// check if a setting has changed and if it is - updates it and optionally calls callback function
+function updateSettings(objSettings, key, newValue, onUpdate) {
+  if (objSettings[key] != newValue) {
+    objSettings[key] = newValue;
+    if (onUpdate) {
+      onUpdate()
+    }
+  }
+}
+
 
 messaging.peerSocket.onmessage  = evt =>  {
   
    switch (evt.data.key) {
      case "weatherInterval":
-       userSettings.weatherInterval = JSON.parse(evt.data.newValue).values[0].value;
-       setWeatherInterval(userSettings.weatherInterval);
+       updateSettings(userSettings, evt.data.key, JSON.parse(evt.data.newValue).values[0].value, ()=>{setWeatherInterval(userSettings.weatherInterval)});
        break;
      case "weatherProvider":
-       userSettings.weatherProvider = JSON.parse(evt.data.newValue).values[0].value;
-       setWeatherProvider(userSettings.weatherProvider, userSettings.weatherAPIkey);
+        updateSettings(userSettings, evt.data.key, JSON.parse(evt.data.newValue).values[0].value, ()=>{setWeatherProvider(userSettings.weatherProvider, userSettings.weatherAPIkey)});
        break;
      case "weatherAPIkey":
-       userSettings.weatherAPIkey = JSON.parse(evt.data.newValue).name;
-       setWeatherProvider(userSettings.weatherProvider, userSettings.weatherAPIkey);
+       updateSettings(userSettings, evt.data.key, JSON.parse(evt.data.newValue).name, ()=>{setWeatherProvider(userSettings.weatherProvider, userSettings.weatherAPIkey)});
        break;
      case "weatherTemperature":
-       userSettings.weatherTemperature = JSON.parse(evt.data.newValue).values[0].value;
-       weather.fetch();
+       updateSettings(userSettings, evt.data.key, JSON.parse(evt.data.newValue).values[0].value, ()=> {weather.fetch()});
        break;
     case "timeSeparator":
-       userSettings.timeSeparator = JSON.parse(evt.data.newValue).values[0].value;
-       updateClock();
+       updateSettings(userSettings, evt.data.key, JSON.parse(evt.data.newValue).values[0].value, ()=> {updateClock()});
        break;
      case "optionTop":
-       userSettings.optionTop = JSON.parse(evt.data.newValue).values[0].value;
-       setOption(topOption, userSettings.optionTop);
+       updateSettings(userSettings, evt.data.key, JSON.parse(evt.data.newValue).values[0].value, ()=> {setOption(topOption, userSettings.optionTop)});
        break;
      case "optionBottom":
-       userSettings.optionBottom = JSON.parse(evt.data.newValue).values[0].value;
-       setOption(bottomOption, userSettings.optionBottom);
+       updateSettings(userSettings, evt.data.key, JSON.parse(evt.data.newValue).values[0].value, ()=> {setOption(bottomOption, userSettings.optionBottom)});
        break;       
      case "text":
-       userSettings.text = JSON.parse(evt.data.newValue).name;
+       updateSettings(userSettings, evt.data.key, JSON.parse(evt.data.newValue).name);
        break;
      case "clockFace":
-       userSettings.clockFace = JSON.parse(evt.data.newValue).values[0].value;
-       setClockFace(userSettings.clockFace);
+       updateSettings(userSettings, evt.data.key, JSON.parse(evt.data.newValue).values[0].value, ()=> {setClockFace(userSettings.clockFace)});
        break;
      case "secondaryTimezone":
        userSettings.timezoneName = evt.data.newValue.timezoneName;
@@ -346,7 +348,8 @@ setClockFace(userSettings.clockFace);
 // Don't start with a blank screen
 updateClock();
 
-//TEST!!! Mocking battery update
-updateBattery(Math.floor(Math.random()*101));
+//battery
+updateBattery(Math.floor(battery.chargeLevel));
+battery.onchange = () => {updateBattery(Math.floor(battery.chargeLevel))};
 
 
