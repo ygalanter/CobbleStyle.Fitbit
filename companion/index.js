@@ -19,52 +19,65 @@ messaging.peerSocket.close = () => {
   console.log("Companion Socket Closed");
 };
 
-// A user changes settings
-settingsStorage.onchange = evt => {
+
+// Processing settings key and value - special processing for tinmezone offset
+function processKeyValue(key, newValue) {
   
   let data = {
-    key: evt.key,
+    key: key,
   };
   
-  if (evt.key == "secondaryTimezone") { // if this is timezone data - getting realtime timezone
+  if (key == "secondaryTimezone") { // if this is timezone data - getting realtime timezone
     
       // setting initial values
       data.newValue = {
-        timezoneName: JSON.parse(evt.newValue).values[0].value.timezoneName,
-        timezoneOffset: JSON.parse(evt.newValue).values[0].value.timezoneOffset
+        timezoneName: JSON.parse(newValue).values[0].value.timezoneName,
+        timezoneOffset: JSON.parse(newValue).values[0].value.timezoneOffset
       }
     
-      // getting realtime offset
-       fetch('http://api.timezonedb.com/?' + JSON.parse(evt.newValue).values[0].value.timezoneCoordinates + '&key=2F2TELTVDRIB&format=json')
-          .then((response) => {return response.json()})
-          .then((tmz) => { // on success - asssigning new offset and sending to the watch
-                data.newValue.timezoneOffset = parseInt(tmz.gmtOffset) / 60;
-                console.log("Got offset: " + data.newValue.timezoneOffset);
+      console.log("static offset: " + data.newValue.timezoneOffset);
+     
+      let coordinates = JSON.parse(newValue).values[0].value.timezoneCoordinates;
+    
+      if (coordinates != '') { // coordinates exist - get dynanmic timezone 
+    
+        // getting realtime offset
+         fetch('https://api.timezonedb.com/?' + coordinates + '&key=2F2TELTVDRIB&format=json')
+            .then((response) => {return response.json()})
+            .then((tmz) => { // on success - asssigning new offset and sending to the watch
+                  data.newValue.timezoneOffset = parseInt(tmz.gmtOffset) / 60;
+                  console.log("Got offset: " + data.newValue.timezoneOffset);
+                  sendVal(data);
+            })
+            .catch((err) => {  // on error - sending value as is - with original value
+                console.log("Got offset error: " + err);
                 sendVal(data);
-          })
-          .catch((err) => {  // on error - sending value as is - with original value
-              console.log("Got offset error: " + err);
-              sendVal(data);
           });
+        
+      } else { // if this is local timezone or GMT - sending static values
+          sendVal(data)
+      }
     
   } else { // otherwise sending data as is
-      data.newValue = evt.newValue
+      data.newValue = newValue
       sendVal(data);
   }
   
+  
+}
 
+// A user changes settings
+settingsStorage.onchange = evt => {
+  processKeyValue(evt.key, evt.newValue);
 };
+
 
 // Restore any previously saved settings and send to the device
 function restoreSettings() {
   for (let index = 0; index < settingsStorage.length; index++) {
     let key = settingsStorage.key(index);
     if (key) {
-      let data = {
-        key: key,
-        newValue: settingsStorage.getItem(key)
-      };
-      sendVal(data);
+        processKeyValue(key, settingsStorage.getItem(key));
     }
   }
 }

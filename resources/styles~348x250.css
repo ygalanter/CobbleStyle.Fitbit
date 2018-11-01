@@ -1,0 +1,53 @@
+.digitalTime {
+  font-size: 160;
+  font-family: Tungsten-Medium;
+  text-length: 32;
+  fill: white;
+  text-anchor: middle;
+  letter-spacing: 5;
+  y: 50%+60;
+  x: 50%;
+}
+
+
+.options {
+  font-size: 45;
+  font-family: Tungsten-Medium;
+  text-length: 32;
+  fill: white;
+  text-anchor: middle;
+}
+
+.top {
+  x: 50%;
+  y: 45;
+}
+
+.bottom {
+  x: 50%;
+  y: 100%-5;
+}
+
+.horizontalLine {
+  stroke-width: 1;
+  fill: black;
+  x1: 10;
+  x2: 100%-10;
+}
+
+
+.sideBarLarge {
+  font-size: 45;
+  font-family: Seville-Bold;
+  text-length: 32;
+  fill: black;
+  text-anchor: middle;
+}
+
+.sideBarSmall {
+  font-size: 25;
+  font-family: Seville-Bold;
+  text-length: 32;
+  fill: black;
+  text-anchor: middle;
+}

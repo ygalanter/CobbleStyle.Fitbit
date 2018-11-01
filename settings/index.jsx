@@ -18,8 +18,9 @@ function mySettings(props) {
                 options={[
                   {name:"Yahoo Weather", value:"yahoo"},
                   {name:"Open Weather Map", value:"owm"},
-                  {name:"Weather Underground", value:"wunderground"},
-                  {name:"Dark Sky", value:"darksky"}
+                  // {name:"Weather Underground", value:"wunderground"},
+                  // {name:"Dark Sky", value:"darksky"},
+                  {name:"Weatherbit", value:"weatherbit"}
                 ]}
               />
               <TextInput
@@ -61,9 +62,12 @@ function mySettings(props) {
               options={[
                 {name:"Disabled", value:0},
                 {name:"Custom Text", value:1},
-                {name:"AM/PM Indicator", value:2},
                 {name:"Step Count", value:3},
+                {name:"Calories Burned", value:8},         
+                {name:"Heartrate", value:6},
                 {name:"Location", value:4},
+                {name:"AM/PM Indicator", value:2},
+                {name:"Seconds", value:7},
                 {name:"Secondary Timezone", value:5}
               ]}
             />
@@ -73,9 +77,12 @@ function mySettings(props) {
               options={[
                 {name:"Disabled", value:0},
                 {name:"Custom Text", value:1},
-                {name:"AM/PM Indicator", value:2},
                 {name:"Step Count", value:3},
+                {name:"Calories Burned", value:8},               
+                {name:"Heartrate", value:6},
                 {name:"Location", value:4},
+                {name:"AM/PM Indicator", value:2},
+                {name:"Seconds", value:7},
                 {name:"Secondary Timezone", value:5}
               ]}
             />
@@ -86,11 +93,13 @@ function mySettings(props) {
               label={`Secondary timezone`}
               settingsKey="secondaryTimezone"
               options={[
-                {name:"[Local Time]", value:{timezoneName:null, timezoneCoordinates:null, timzoneOffset:null, }},
+                {name:"[Local Time]", value:{timezoneName:"", timezoneCoordinates:"", timezoneOffset:-1, }}, 
+                {name:"GMT/UTC", value:{timezoneName:"GMT", timezoneCoordinates:"", timezoneOffset:0 }},
                 {name:"Beijing Time", value:{timezoneName:"BJS", timezoneCoordinates:"lat=39.90615&lng=116.39125", timezoneOffset:480 }},
                 {name:"Brussels Time", value:{timezoneName:"BRU", timezoneCoordinates:"lat=50.84683&lng=4.35170", timzoneOffset:60 }},
                 {name:"Buenos Aires Time", value:{timezoneName:"BUE", timezoneCoordinates:"lat=-34.61607&lng=-58.43329" , timezoneOffset:-180 }},
                 {name:"Cairo Time", value:{timezoneName:"CAI", timezoneCoordinates:"lat=30.03503&lng=31.56475", timezoneOffset:130 }},
+                {name:"Dubai Time", value:{timezoneName:"DXB", timezoneCoordinates:"lat=25.2048&lng=55.2708", timezoneOffset:240 }},
                 {name:"Jakarta Time", value:{timezoneName:"JKT", timezoneCoordinates:"lat=-6.17542&lng=106.82718", timezoneOffset:420 }},
                 {name:"Hong Kong Time", value:{timezoneName:"HKG", timezoneCoordinates:"lat=22.27942&lng=114.16281", timezoneOffset:480 }},
                 {name:"London Time", value:{timezoneName:"LON", timezoneCoordinates:"lat=51.5074&lng=-0.1278", timezoneOffset:60 }},
@@ -100,8 +109,9 @@ function mySettings(props) {
                 {name:"Mexico City Time", value:{timezoneName:"MEX", timezoneCoordinates:"lat=19.43261&lng=-99.13321", timezoneOffset:-360 }},
                 {name:"Moscow Time", value:{timezoneName:"MOW", timezoneCoordinates:"lat=55.72520&lng=37.62896", timezoneOffset:180 }},
                 {name:"New Delhi Time", value:{timezoneName:"DEL", timezoneCoordinates:"lat=28.64431&lng=77.09239", timezoneOffset:330 }},
-                {name:"New York Time", value:{timezoneName:"NYC", timezoneCoordinates:"lat=40.69785&lng=-73.97963", timezoneOffset:-300 }},
+                {name:"New York, NY Time", value:{timezoneName:"NYC", timezoneCoordinates:"lat=40.69785&lng=-73.97963", timezoneOffset:-300 }},
                 {name:"Paris Time", value:{timezoneName:"PAR", timezoneCoordinates:"lat=48.85888&lng=2.34694", timezoneOffset:60 }},
+                {name:"Phoenix, AZ Time", value:{timezoneName:"PHX", timezoneCoordinates:"lat=33.4484&lng=-112.0740", timezoneOffset:-420 }},
                 {name:"Rome Time", value:{timezoneName:"ROM", timezoneCoordinates:"lat=41.89880&lng=12.54513", timezoneOffset:60 }},
                 {name:"Sydney Time", value:{timezoneName:"SYD", timezoneCoordinates:"lat=-33.76965&lng=150.80178", timezoneOffset:600 }},
                 {name:"Tokyo Time", value:{timezoneName:"TYO", timezoneCoordinates:"lat=35.6895&lng=139.6917", timezoneOffset:540 }},
@@ -110,7 +120,15 @@ function mySettings(props) {
             />         
         </Section>
           
-          
+           
+       <Section title={<Text bold align="center">Donate!</Text>}>
+      
+      <Text italic>If you like this clockface and would like to see it further developed as well as other wonderful apps and faces created, please know - I run on coffee. It's an essential fuel for inspiration and creativity. So feel free to donate so I won't run out of fuel :) Thanks!
+         </Text>
+      
+      <Link source="https://paypal.me/yuriygalanter">YURIY'S COFFEE FUND</Link> 
+         
+         </Section>    
     
     </Page>
   );

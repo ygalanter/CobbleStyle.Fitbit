@@ -9,9 +9,12 @@ import {preferences} from "user-settings";
 import dtlib from "../common/datetimelib"
 import { battery } from "power";
 import Weather from '../common/weather/device';
-import {weather_icon } from '../common/weather/common.js';
-import {monoDigit} from '../common/util.js'
+import {weather_icon } from '../common/weather/icons.js';
 import userActivity from "user-activity";
+import { HeartRateSensor } from "heart-rate";
+import { BodyPresenceSensor } from "body-presence";
+
+let heartrate = '...reading';
 
 
 // Get a handle on the elements
@@ -34,7 +37,6 @@ let centerCircleMiddle = document.getElementById("centerCircleMiddle");
 
                                                 
 //consts
-const METRIC = "steps";
 const COLOR_AUTOMATIC = 0;
 const COLOR_MANUAL = 1;
 
@@ -44,6 +46,9 @@ const OPTION_AMPM = 2;
 const OPTION_STEP_COUNTER = 3;
 const OPTION_LOCATION = 4;
 const OPTION_SECONDARY_TIMEZONE = 5;
+const OPTION_HEARTRATE = 6;
+const OPTION_SECONDS = 7;
+const OPTION_CALORIES = 8;
 
 const TIME_DIGITAL = 0;
 const TIME_ANALOG = 1;
@@ -55,7 +60,7 @@ dtlib.timeFormat = preferences.clockDisplay == "12h" ? 1: 0;
 document.getElementById("analog-watch-hands").style.display="none";
 
 // Update the clock every minute
-clock.granularity = "minutes";
+clock.granularity = "seconds";
 
 // trying to get user settings if saved before
 let userSettings;
@@ -75,15 +80,54 @@ try {
     color: COLOR_AUTOMATIC,
     optionTop: OPTION_TEXT,
     optionBottom: OPTION_STEP_COUNTER,
-    text: "FITBIT IONIC",
+    text: "FOR THE WIN",
     location: "...",
     clockFace: TIME_DIGITAL,
-    timezoneOffset: null, // secondary timezone UTC offset
-    timezoneName: null, // secondary timezone short name
+    timezoneOffset: -1, // secondary timezone UTC offset (default local)
+    timezoneName: "", // secondary timezone short name (default local)
     iconHref: "images/unknown.png",
     tempText: "...°",
   }
 }
+
+//trap
+if (!userSettings.text) {
+    userSettings = {
+    weatherInterval: 30, // update weather every 30 min
+    weatherTemperature: "F", // display temperature in Fahrenheit
+    weatherProvider: "yahoo", // possible: yahoo, owm, wunderground or darksky)
+    weatherAPIkey: "", //by deafult API key is not set
+    timeSeparator: ":", //possible : or .
+    color: COLOR_AUTOMATIC,
+    optionTop: OPTION_TEXT,
+    optionBottom: OPTION_STEP_COUNTER,
+    text: "FOR THE WIN",
+    location: "...",
+    clockFace: TIME_DIGITAL,
+    timezoneOffset: -1, // secondary timezone UTC offset (default local)
+    timezoneName: "", // secondary timezone short name (default local)
+    iconHref: "images/unknown.png",
+    tempText: "...°",
+  }
+}
+
+// setting interval to fetch weather
+let iWeatherInterval; 
+function setWeatherInterval(interval) {
+  clearInterval(iWeatherInterval);
+  iWeatherInterval = setInterval(() => weather.fetch(), interval * 60 * 1000); 
+}
+
+// setting weather provider
+let weather = new Weather();
+function setWeatherProvider(provider, apikey) {
+  weather.setProvider(provider); 
+  weather.setApiKey(apikey);
+  weather.setMaximumAge(25 * 1000); 
+  console.log("1. Provider: " + provider);
+  console.log("1. API Key: " + apikey);
+}
+
 
 function setClockFace(type) {
   if (type == TIME_DIGITAL) {
@@ -107,15 +151,18 @@ function setOption(optionField, optionType) {
         optionField.text = dtlib.getAmApm(today.getHours());
         break;
       case OPTION_STEP_COUNTER:
-        optionField.text = userActivity.today.local[METRIC] + " steps";
+        optionField.text = userActivity.today.adjusted["steps"] + " steps";
         break;
+      case OPTION_CALORIES:
+        optionField.text = userActivity.today.adjusted["calories"] + " cal";
+        break;      
       case OPTION_LOCATION:
         optionField.text = userSettings.location.toUpperCase();
         break;
       case OPTION_SECONDARY_TIMEZONE:
         let newToday;
        
-        if (userSettings.timezoneOffset) { 
+        if (userSettings.timezoneOffset != -1) { 
           let utc = today.getTime() + (today.getTimezoneOffset() * 60000);
           newToday = new Date(utc + (60000*userSettings.timezoneOffset));
         } else {
@@ -136,12 +183,18 @@ function setOption(optionField, optionType) {
         let mins = dtlib.zeroPad(newToday.getMinutes());
         
         let locName = ""
-        if (userSettings.timezoneName != null) {
+        if (userSettings.timezoneName != "") {
           locName = userSettings.timezoneName + " ";
         }
 
         optionField.text = `${locName}${hours}${userSettings.timeSeparator}${mins}${ampm}`;
        
+        break;
+      case OPTION_HEARTRATE:
+        optionField.text = `${heartrate} bpm`;
+        break;
+      case OPTION_SECONDS:
+        optionField.text = dtlib.zeroPad(today.getSeconds());
         break;
       default:
         console.log("How the hell did we get here?");
@@ -155,22 +208,7 @@ me.onunload = () => {
     fs.writeFileSync("user_settings.json", userSettings, "json");
 }
 
-// setting interval to fetch weather
-let iWeatherInterval; 
-function setWeatherInterval(interval) {
-  clearInterval(iWeatherInterval);
-  iWeatherInterval = setInterval(() => weather.fetch(), interval * 60 * 1000); 
-}
 
-// setting weather provider
-let weather = new Weather();
-function setWeatherProvider(provider, apikey) {
-  weather.setProvider(provider); 
-  weather.setApiKey(apikey);
-  weather.setMaximumAge(25 * 1000); 
-  console.log("1. Provider: " + provider);
-  console.log("1. API Key: " + apikey);
-}
 
 let sidebarPrimaryColor = "forestgreen";
 let sidebarSecondaryColor = "darkgreen";
@@ -236,12 +274,9 @@ function updateClock() {
 clock.ontick = () => updateClock();
   
 
-// setting weather provider
-let weather = new Weather();
-
 // Display the weather data received from the companion
 weather.onsuccess = (data) => {
-  console.log("Device weather: " + JSON.stringify(data));
+  console.log("Device weather: " + data.temperatureF);
   // setting weather icon
   icon.href = "images/" + weather_icon[data.isDay? "day" : "night"][data.conditionCode];
   
@@ -260,7 +295,7 @@ weather.onsuccess = (data) => {
 }
 
 weather.onerror = (error) => {
-  console.log("Device weather error: " + JSON.stringify(error));
+  console.log("Device weather error: " + error);
  
   // setting weather icon
   icon.href = "images/unknown.png";
@@ -305,16 +340,17 @@ function updateSettings(objSettings, key, newValue, onUpdate) {
 
 
 messaging.peerSocket.onmessage  = evt =>  {
+   console.log("GOT KEY : " + evt.data.key);
   
    switch (evt.data.key) {
      case "weatherInterval":
        updateSettings(userSettings, evt.data.key, JSON.parse(evt.data.newValue).values[0].value, ()=>{setWeatherInterval(userSettings.weatherInterval)});
        break;
      case "weatherProvider":
-        updateSettings(userSettings, evt.data.key, JSON.parse(evt.data.newValue).values[0].value, ()=>{setWeatherProvider(userSettings.weatherProvider, userSettings.weatherAPIkey)});
+        updateSettings(userSettings, evt.data.key, JSON.parse(evt.data.newValue).values[0].value, ()=>{setWeatherProvider(userSettings.weatherProvider, userSettings.weatherAPIkey);weather.fetch()});
        break;
      case "weatherAPIkey":
-       updateSettings(userSettings, evt.data.key, JSON.parse(evt.data.newValue).name, ()=>{setWeatherProvider(userSettings.weatherProvider, userSettings.weatherAPIkey)});
+       updateSettings(userSettings, evt.data.key, JSON.parse(evt.data.newValue).name, ()=>{setWeatherProvider(userSettings.weatherProvider, userSettings.weatherAPIkey);weather.fetch()});
        break;
      case "weatherTemperature":
        updateSettings(userSettings, evt.data.key, JSON.parse(evt.data.newValue).values[0].value, ()=> {weather.fetch()});
@@ -337,10 +373,59 @@ messaging.peerSocket.onmessage  = evt =>  {
      case "secondaryTimezone":
        userSettings.timezoneName = evt.data.newValue.timezoneName;
        userSettings.timezoneOffset = evt.data.newValue.timezoneOffset;
+       console.log("TName : " + userSettings.timezoneName);
+       console.log("TOffset : " + userSettings.timezoneOffset);
    }
  
+   updateClock();
   
 }
+
+
+var hrm = new HeartRateSensor();
+
+hrm.onreading = function() {
+  if (display.on) {
+    heartrate = hrm.heartRate;
+  }
+}
+hrm.start();
+
+display.onchange = () => {
+  
+  if (!bodyPresenceSensor.present) return;
+  
+  if (display.on) {
+    hrm.start();
+  } else {
+    hrm.stop();
+  }
+}
+
+let bodyPresenceSensorLast;
+let bodyPresenceSensor = new BodyPresenceSensor();
+
+bodyPresenceSensor.onactivate = () => {
+  bodyPresenceSensorLast = bodyPresenceSensor.present;
+}
+
+bodyPresenceSensor.start();
+
+bodyPresenceSensor.onreading = () => {
+  
+  if (bodyPresenceSensor.present === bodyPresenceSensorLast) return;
+  
+  if (bodyPresenceSensor.present) {
+    heartrate = "...reading"
+    hrm.start();
+  } else {
+    hrm.stop();
+    heartrate = "No"
+  }
+  
+  bodyPresenceSensorLast = bodyPresenceSensor.present;
+}
+
 
 //setting clockface
 setClockFace(userSettings.clockFace);
