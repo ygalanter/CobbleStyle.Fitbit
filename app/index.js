@@ -74,7 +74,7 @@ try {
   userSettings = {
     weatherInterval: 30, // update weather every 30 min
     weatherTemperature: "F", // display temperature in Fahrenheit
-    weatherProvider: "yahoo", // possible: yahoo, owm, wunderground or darksky)
+    weatherProvider: "default", // possible: default, owm, weatherbit)
     weatherAPIkey: "", //by deafult API key is not set
     timeSeparator: ":", //possible : or .
     color: COLOR_AUTOMATIC,
@@ -95,7 +95,7 @@ if (!userSettings.text) {
     userSettings = {
     weatherInterval: 30, // update weather every 30 min
     weatherTemperature: "F", // display temperature in Fahrenheit
-    weatherProvider: "yahoo", // possible: yahoo, owm, wunderground or darksky)
+    weatherProvider: "default", // possible: default, owm, weatherbit)
     weatherAPIkey: "", //by deafult API key is not set
     timeSeparator: ":", //possible : or .
     color: COLOR_AUTOMATIC,
@@ -121,6 +121,12 @@ function setWeatherInterval(interval) {
 // setting weather provider
 let weather = new Weather();
 function setWeatherProvider(provider, apikey) {
+
+  if (provider == "default") {
+    provider = "weatherbit";
+    apikey = "weatherbit-api-key-here";
+  }
+
   weather.setProvider(provider); 
   weather.setApiKey(apikey);
   weather.setMaximumAge(25 * 1000); 
